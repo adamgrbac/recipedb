@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+	<meta charset="UTF-8">
+	<title>RecipeDB</title>
+	<link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.css') }}">
+	<link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<script src="http://code.jquery.com/jquery-3.3.1.min.js"></script>
+	<script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+	<script src='https://www.google.com/recaptcha/api.js' async defer></script>
+	<script>
+	    function parse_results(data, target) {
+		    list = document.createElement("ul");
+		    for (recipe in data) {
+			    node = document.createElement("li")
+				recipe_id = data[recipe][0]
+				recipe_name = data[recipe][1]
+				recipe_description = data[recipe][2]
+				recipe_book = data[recipe][3]
+				recipe_page = data[recipe][4]
+				recipe_url = data[recipe][5]
+				
+				// Create Link
+				link = document.createElement("a")
+				link.setAttribute("href","/recipes/"+recipe_id)
+				link.innerHTML = recipe_name
+				node.appendChild(link)
+			    
+				// Create Sublist
+				sublist = document.createElement("ul")
+				if(recipe_description != ""){
+				    description = document.createElement("li")
+					description.innerHTML = recipe_description
+					sublist.appendChild(description)
+				}
+				if(recipe_book != ""){
+				    book = document.createElement("li")
+					book.innerHTML = recipe_book+(recipe_page != "" ? ", p."+recipe_page : "")
+					sublist.appendChild(book)
+				}
+				if(recipe_url != ""){
+				    url = document.createElement("li")
+					url_link = document.createElement("a")
+					url_link.setAttribute("href", recipe_url)
+					url_link.innerHTML = recipe_url
+					url.appendChild(url_link)
+					sublist.appendChild(url)
+				}
+				
+				// Add sublist
+				if(sublist.childElementCount > 0){
+				    node.appendChild(sublist)
+				}
+				
+			    list.appendChild(node)
+		    }
+			target.appendChild(list)
+		};
+		
+	    function search_submit() {
+		    query = document.getElementById("search_bar").value;
+			if(query == "") { 
+			    results = document.getElementById("results")
+		        results.innerHTML = ""
+			    return false;
+			}
+            fetch("/search?q="+query).
+			    then(function(res) {
+				    return res.json()
+				}).
+				then(function(data) {
+				    results = document.getElementById("results")
+					results.innerHTML = ""
+				    parse_results(data, results)
+					return false
+				})		    
+			return false
+		}
+	</script>
+	<style>
+		.custom_narrow {
+			width: 50%;
+		}
+	</style>
+	<body>
+		<div class="container-fluid">
+			<div class="row" id="header">
+				<div class="col-xs-1 col-md-1"><a href="/">Home</a></div>
+				<div class="col-xs-1 col-md-1"><a href="/recipes">Recipes</a></div>
+			</div>
+			<div class="row" id="recipes">
+				<div class="col-xs-12 col-md-8">
+					<h1>Search</h1>
+					<form>
+						<input type="text" id="search_bar" onkeyup="search_submit()">
+					</form>
+					<div id="results"></div>
+				</div>
+			</div>
+			<div class="row> id="footer"></div>
+		</div>
+	</body>
+</html>

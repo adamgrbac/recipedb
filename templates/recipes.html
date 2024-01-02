@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+	<meta charset="UTF-8">
+	<title>RecipeDB - Recipes</title>
+	<link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.css') }}">
+	<link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<script src="http://code.jquery.com/jquery-3.3.1.min.js"></script>
+	<script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+	<script src='https://www.google.com/recaptcha/api.js' async defer></script>
+	<style>
+		.custom_narrow {
+			width: 50%;
+		}
+	</style>
+	<body>
+		<div class="container-fluid">
+			<div class="row" id="header">
+				<div class="col-xs-1 col-md-1"><a href="/">Home</a></div>
+				<div class="col-xs-1 col-md-1"><a href="/recipes">Recipes</a></div>
+			</div>
+			<div class="row" id="recipes">
+				<div class="col-xs-12 col-md-8">
+					<h1>Recipes</h1>
+					<table border=1>
+						<tr>
+							<th>Name</th>
+							<th>Description</th>
+							<th>Book</th>
+							<th>Page Number</th>
+							<th>URL</th>
+						</tr>
+						{% for recipe in recipes %}
+							<tr>
+								<td><a href="/recipes/{{recipe[0]}}">{{recipe[1]}}</a></td>
+								<td>{{recipe[2]}}</td>
+								<td>{{recipe[3]}}</td>
+								<td>{{recipe[4]}}</td>
+								<td><a href="{{recipe[5]}}">{{recipe[5]}}</a></td>
+							</tr>
+						{% endfor %}
+					<table>
+				</div>
+			</div>
+			<div class="row> id="footer"></div>
+		</div>
+	</body>
+</html>

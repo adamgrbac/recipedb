@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+	<meta charset="UTF-8">
+	<title>RecipeDB - Recipes</title>
+	<link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.css') }}">
+	<link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<script src="http://code.jquery.com/jquery-3.3.1.min.js"></script>
+	<script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+	<script src='https://www.google.com/recaptcha/api.js' async defer></script>
+	<script>
+	    function authorize_add() {
+		    const popup = window.open("https://todoist.com/oauth/authorize?client_id=fd82d07fe69e499abb2ad2e7d7748467&scope=data:read_write&state=habbasdasher", "popup", "popup=true")
+			const checkPopup = setInterval(() => {
+			   if (popup.window.location.href.includes("code")) {
+			        token = popup.window.document.body.firstChild.textContent;
+					sessionStorage.setItem("access_token", token);
+					popup.close(); 
+					document.getElementById("login").style.visibility = "hidden"
+					
+					get_project_list()
+			   }
+			   if (!popup || !popup.closed) return;
+			   clearInterval(checkPopup);
+			}, 1000);
+		    
+			return false;
+		}
+		
+		function get_project_list() {
+			fetch("https://api.todoist.com/rest/v2/projects", {
+				headers: {
+					'Authorization': 'Bearer '+sessionStorage.getItem("access_token")
+				}
+			}).
+			    then(function(res) {
+				    return res.json()
+				}).
+				then(function(data) {
+				    shopping_list = document.getElementById("shopping_list")
+					
+					dropdown = document.getElementById("project")
+					for(item in data){
+						project_item = document.createElement("option")
+						project_item.setAttribute("value",data[item].id)
+						project_item.innerHTML = data[item].name
+					    dropdown.appendChild(project_item)
+					}
+					
+					button = document.createElement("button")
+					button.setAttribute("id","add_items")
+					button.setAttribute("onclick","add_items()")
+					button.disabled = true
+					button.innerHTML = "Add Items"
+					
+					shopping_list.appendChild(button)
+					
+					dropdown.addEventListener("change", () => {
+						add_button = document.getElementById("add_items")
+						switch(dropdown.value) {
+							case "":
+								add_button.disable = true
+								break;
+							default:
+								add_button.disabled = false
+						}
+					})
+					
+					return false
+				})	
+		}
+		function add_items() {
+			checkboxes = document.querySelectorAll('input[type=checkbox]')
+			project = document.getElementById("project")
+			for(checkbox in checkboxes) {
+			    if(checkboxes[checkbox].checked) {
+			        fetch("https://api.todoist.com/rest/v2/tasks", {
+						method: "POST",
+						headers: {
+							'Authorization': 'Bearer '+sessionStorage.getItem("access_token"),
+							'Content-Type': 'application/json'
+						},
+						body: JSON.stringify({
+							"content": checkboxes[checkbox].value,
+							"project_id": project.options[project.selectedIndex].value
+						})
+					}).
+					then(function(res) {
+						alert("Added items to list!")
+					})
+				}
+			}
+			return false
+		}
+	</script>
+	<style>
+		.custom_narrow {
+			width: 50%;
+		}
+	</style>
+	<body>
+		<div class="container-fluid">
+			<div class="row" id="header">
+				<div class="col-xs-1 col-md-1"><a href="/">Home</a></div>
+				<div class="col-xs-1 col-md-1"><a href="/recipes">Recipes</a></div>
+			</div>
+			<div class="row" id="recipe">
+				<div class="col-xs-12 col-md-8">
+					<h1>{{ recipe[1] }}</h1>
+					<p>{{ recipe[2] }}</p>
+					<p>Book: {{ recipe[3] }}{% if recipe[4] != "" %}, p.{{ recipe[4] }}{% endif %}</p>
+					<p>URL: <a href="{{ recipe[5] }}">{{ recipe[5] }}</a></p>
+				</div>
+			</div>
+			<div class="row" id="ingredients">
+				<div class="col-xs-12 col-md-8">
+					<h2>Ingredients</h2>
+					<table border=1>
+						<tr>
+							<th>Name</th>
+							<th>Category</th>
+							<th>Quantity</th>
+							<th>Unit</th>
+							<th>Comment</th>
+							<th>Add to Shopping List?</th>
+						</tr>
+						{% for ingredient in ingredients %}
+							<tr>
+								<td>{{ingredient[1]}}</td>
+								<td>{{ingredient[2]}}</td>
+								<td>{{ingredient[3]}}</td>
+								<td>{{ingredient[4]}}</td>
+								<td>{{ingredient[5]}}</td>
+								<td><input type="checkbox" id="ingedient_{{ loop.counter }}" name="ingredient_{{ loop.counter }}" value="{{ ingredient[3]+" "+ingredient[4]+" "+ingredient[1] }} {% if ingredient[5] != "" %}({{ ingredient[5] }}){% endif %}" checked /></td>
+							</tr>
+						{% endfor %}
+					</table>
+					<br>
+				</div>
+			</div>
+			<div class="row" id="shopping_list">
+				<div class="col-xs-12 col-md-8">
+					<button type="submit" onclick="return authorize_add()" id="login">Login to Todoist</button><br><br>
+					<h4>Choose a list to add items to</h4>
+					<select id="project">
+						<option value=""></option>
+					</select>
+					<br><br>
+				</div>
+			</div>
+			<div class="row> id="footer"></div>
+		</div>
+	</body>
+</html>
