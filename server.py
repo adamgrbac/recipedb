@@ -2,6 +2,7 @@ from flask import Flask, render_template, request
 import requests
 import sqlite3
 import os
+import sys
 
 
 # SQLITE DB
@@ -91,8 +92,9 @@ def callback():
                             "client_id": os.getenv("todoist_client_id"),
                             "client_secret": os.getenv("todoist_client_secret"),
                             "code": code,
-                            "redirect_uri":"/token"
+                            "redirect_uri":"recipedb.ngrok.app/token"
                         })
+
     return res.json()["access_token"]
 
 @app.route("/add_item")
@@ -100,4 +102,4 @@ def add_item():
     pass
  
 if __name__ == "__main__":
-	app.run(host="0.0.0.0", debug=True)
+	app.run(host="0.0.0.0", port=5001, debug=True)
