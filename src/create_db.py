@@ -124,7 +124,6 @@ def main():
                         con.commit()
             
             for ingredient in ingredients:
-                print(ingredient)
                 if ingredient["Name"].strip() != "":
                     res = cur.execute("""
                         SELECT id FROM ingredients where name = ?
