@@ -91,7 +91,7 @@ def callback():
                             "client_id": os.getenv("todoist_client_id"),
                             "client_secret": os.getenv("todoist_client_secret"),
                             "code": code,
-                            "redirect_uri":"http://localhost:5000/token"
+                            "redirect_uri":"/token"
                         })
     return res.json()["access_token"]
 
@@ -100,4 +100,4 @@ def add_item():
     pass
  
 if __name__ == "__main__":
-	app.run()
+	app.run(host="0.0.0.0", debug=True)
