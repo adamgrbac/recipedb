@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request
+from src.create_db import read_sheets
 import requests
 import sqlite3
 import os
@@ -97,9 +98,10 @@ def callback():
 
     return res.json()["access_token"]
 
-@app.route("/add_item")
-def add_item():
-    pass
+@app.route("/refresh")
+def refresh():
+    read_sheets()
+    return "Data refreshed!"
  
 if __name__ == "__main__":
 	app.run(host="0.0.0.0", port=5001, debug=True)

@@ -8,52 +8,49 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
 
-# If modifying these scopes, delete the file token.json.
-SCOPES = ["https://www.googleapis.com/auth/spreadsheets.readonly"]
+def init_db():
+    # SQLITE DB
+    con = sqlite3.connect("recipes.db")
 
-# The ID and range of a sample spreadsheet.
-SPREADSHEET_ID = "1LFY_aU3TxbCH_pXZeHcaRKFopdZhGXSk5Sm89xUXk4U"
+    cur = con.cursor()
 
-# SQLITE DB
-con = sqlite3.connect("../recipes.db")
-
-cur = con.cursor()
-
-cur.execute("""
-    DROP TABLE IF EXISTS recipes;
-""")
-cur.execute("""
-    DROP TABLE IF EXISTS ingredients;
-""")
-cur.execute("""
-    DROP TABLE IF EXISTS recipe_ingredient;
-""")
-cur.execute("""
-    CREATE TABLE IF NOT EXISTS recipes (
-        id INTEGER PRIMARY KEY,
-        name char(50),
-        description char(50),
-        book char(50),
-        page_number char(50),
-        link char(50)
-    );
-""")
-cur.execute("""
-    CREATE TABLE IF NOT EXISTS ingredients (
-        id INTEGER PRIMARY KEY,
-        name char(50),
-        category char(50)
-    );
-""")
-cur.execute("""
-    CREATE TABLE IF NOT EXISTS recipe_ingredient (
-        recipe_id INTEGER,
-        ingredient_id INTEGER,
-        quantity char(50),
-        unit char(50),
-        comment char(256)
-    );
-""")
+    cur.execute("""
+        DROP TABLE IF EXISTS recipes;
+    """)
+    cur.execute("""
+        DROP TABLE IF EXISTS ingredients;
+    """)
+    cur.execute("""
+        DROP TABLE IF EXISTS recipe_ingredient;
+    """)
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS recipes (
+            id INTEGER PRIMARY KEY,
+            name char(50),
+            description char(50),
+            book char(50),
+            page_number char(50),
+            link char(50)
+        );
+    """)
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS ingredients (
+            id INTEGER PRIMARY KEY,
+            name char(50),
+            category char(50)
+        );
+    """)
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS recipe_ingredient (
+            recipe_id INTEGER,
+            ingredient_id INTEGER,
+            quantity char(50),
+            unit char(50),
+            comment char(256)
+        );
+    """)
+    
+    return con
 
 def parse_sheet(values):
     # Parse Recipe details
@@ -68,10 +65,18 @@ def parse_sheet(values):
     return recipe_metadata, ingredients_metadata
 
 
-def main():
+def read_sheets():
   """Shows basic usage of the Sheets API.
   Prints values from a sample spreadsheet.
   """
+  # If modifying these scopes, delete the file token.json.
+  SCOPES = ["https://www.googleapis.com/auth/spreadsheets.readonly"]
+
+  # The ID and range of a sample spreadsheet.
+  SPREADSHEET_ID = "1LFY_aU3TxbCH_pXZeHcaRKFopdZhGXSk5Sm89xUXk4U"
+
+  con = init_db()
+  cur = con.cursor()
   creds = None
   # The file token.json stores the user's access and refresh tokens, and is
   # created automatically when the authorization flow completes for the first
@@ -138,4 +143,4 @@ def main():
 
 
 if __name__ == "__main__":
-  main()
+  read_sheets()
