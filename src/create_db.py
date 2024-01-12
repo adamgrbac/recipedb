@@ -1,5 +1,6 @@
 import os.path
 import sqlite3
+import time
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
@@ -87,7 +88,6 @@ def read_sheets():
   # If there are no (valid) credentials available, let the user log in.
   if not creds or not creds.valid:
     if creds and creds.expired and creds.refresh_token:
-      print("refresh")
       creds.refresh(Request())
     else:
       flow = InstalledAppFlow.from_client_secrets_file(
@@ -102,11 +102,10 @@ def read_sheets():
     service = build("sheets", "v4", credentials=creds)
 
     # Call the Sheets API
-    sheet = service.spreadsheets().get(spreadsheetId=SPREADSHEET_ID).execute()
-    for tab in sheet["sheets"]:
-        tab_name = tab["properties"]["title"]
-        tab_range = f"{tab_name}!A1:F"
-        sheet = service.spreadsheets().values().get(spreadsheetId=SPREADSHEET_ID, range=tab_range).execute()
+    sheets = service.spreadsheets().get(spreadsheetId=SPREADSHEET_ID).execute()
+    ranges = [f"{tab['properties']['title']}!A1:F" for tab in sheets["sheets"]]
+    sheet_values = service.spreadsheets().values().batchGet(spreadsheetId=SPREADSHEET_ID, ranges=ranges).execute()
+    for sheet in sheet_values["valueRanges"]:
         if sheet["range"].split("!")[0] not in ("Instructions","TEMPLATE", "LOOKUPS"):
             recipe, ingredients = parse_sheet(sheet["values"])
             cur.execute("""
