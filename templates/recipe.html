@@ -72,24 +72,27 @@
 		function add_items() {
 			checkboxes = document.querySelectorAll('input[type=checkbox]')
 			project = document.getElementById("project")
+			fetches = []
 			for(checkbox in checkboxes) {
 			    if(checkboxes[checkbox].checked) {
-			        fetch("https://api.todoist.com/rest/v2/tasks", {
-						method: "POST",
-						headers: {
-							'Authorization': 'Bearer '+sessionStorage.getItem("access_token"),
-							'Content-Type': 'application/json'
-						},
-						body: JSON.stringify({
-							"content": checkboxes[checkbox].value,
-							"project_id": project.options[project.selectedIndex].value
+					fetches.push(
+						fetch("https://api.todoist.com/rest/v2/tasks", {
+							method: "POST",
+							headers: {
+								'Authorization': 'Bearer '+sessionStorage.getItem("access_token"),
+								'Content-Type': 'application/json'
+							},
+							body: JSON.stringify({
+								"content": checkboxes[checkbox].value,
+								"project_id": project.options[project.selectedIndex].value
+							})
 						})
-					}).
-					then(function(res) {
-						alert("Added items to list!")
-					})
+					)
 				}
 			}
+			Promise.all(fetches).then(function() {
+				alert("Added items to list!")
+			})
 			return false
 		}
 	</script>
