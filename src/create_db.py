@@ -78,6 +78,7 @@ def read_sheets():
   con = init_db()
   cur = con.cursor()
   creds = None
+  ingredient_dict = {}
   # The file token.json stores the user's access and refresh tokens, and is
   # created automatically when the authorization flow completes for the first
   # time.
@@ -86,6 +87,7 @@ def read_sheets():
   # If there are no (valid) credentials available, let the user log in.
   if not creds or not creds.valid:
     if creds and creds.expired and creds.refresh_token:
+      print("refresh")
       creds.refresh(Request())
     else:
       flow = InstalledAppFlow.from_client_secrets_file(
@@ -110,34 +112,24 @@ def read_sheets():
             cur.execute("""
                 INSERT INTO recipes (name, description, book, page_number, link) VALUES (?, ?, ?, ?, ?)
             """, [x.lower() for x in recipe.values()])
-            con.commit()
-            res = cur.execute("""
-                SELECT id FROM recipes where name = ?
-            """, [recipe["Name"].lower()])
-            recipe_id = res.fetchone()[0]
+            recipe_id = cur.lastrowid
             
             # Insert unique ingredients
             for ingredient in ingredients:
                 if ingredient["Name"].strip() != "":
-                    res = cur.execute("""
-                        SELECT id FROM ingredients where name = ?
-                    """, [ingredient["Name"].strip().lower()])
-                    if len(res.fetchall()) == 0:
+                    ingredient_id = ingredient_dict.get(ingredient["Name"].strip().lower(),-1)
+                    if ingredient_id == -1:
                         cur.execute("""
                             INSERT INTO ingredients (name, category) VALUES (?, ?) 
-                        """, [ingredient["Name"].strip().lower(), ingredient["Category"].strip().lower()])
-                        con.commit()
-            
-            for ingredient in ingredients:
-                if ingredient["Name"].strip() != "":
-                    res = cur.execute("""
-                        SELECT id FROM ingredients where name = ?
-                    """, [ingredient["Name"].strip().lower()])
+                        """, [ingredient["Name"].strip().lower(), ingredient.get("Category","").strip().lower()])
+                        ingredient_dict[ingredient["Name"].strip().lower()] = cur.lastrowid
+                        
                     cur.execute("""
                         INSERT INTO recipe_ingredient VALUES (?, ?, ?, ?, ?)
-                    """,[recipe_id, res.fetchone()[0], ingredient.get("Quantity",""), ingredient.get("Unit",""), ingredient.get("Comment","")])
-                    con.commit()
-            
+                    """,[recipe_id, ingredient_dict[ingredient["Name"].strip().lower()], ingredient.get("Quantity",""), ingredient.get("Unit",""), ingredient.get("Comment","")])
+                    
+    con.commit()
+
   except HttpError as err:
     print(err)
 
